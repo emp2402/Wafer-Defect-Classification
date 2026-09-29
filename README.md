@@ -12,7 +12,7 @@ Insights and recommendations are provided on the following key areas:
 
 # Data Structure & Initial Checks
 
-The semiconductor database structure consists of real silicon wafer maps from the WM-811K dataset, evaluated across an imbalanced test set of $n = 17,295$ wafer records[cite: 2]. The primary data components and classes include:
+The semiconductor database structure consists of real silicon wafer maps from the WM-811K dataset, evaluated across an imbalanced test set of $n = 17,295$ wafer records. The primary data components and classes include:
 
 - **Background Channel (Value 0):** Non-wafer grid area surrounding the physical silicon wafer.
 - **Passing Die Channel (Value 1):** Functional integrated circuits passing quality checks.
@@ -74,8 +74,59 @@ Standard accuracy metrics are severely misleading for wafer defect classificatio
   
 * **Removing class weights consistently improves F1 across all architectures.** Removing class weights raised the baseline F1 from 0.859 to 0.890, ResNet F1 from 0.880 to 0.911, and SE F1 from 0.845 to 0.906.
 
+<table>
+  <tr>
+    <td align="center"><b>Model performances with no weights</b></td>
+    <td align="center"><b>Model performances with added weights</b></td>
+  </tr>
+  <tr>
+    <td><img width="890" height="597" alt="Screenshot 2026-09-29 183149" src="https://github.com/user-attachments/assets/2e5f1a1b-0b97-4195-9008-2af61b7dd851" /></td>
+    <td><img width="890" height="597" alt="Screenshot 2026-09-29 183244" src="https://github.com/user-attachments/assets/a829fcbf-fe4c-4c0e-89cd-969a1615a6ef" />
+</td>
+  </tr>
+</table>
 
+### Metric Evaluation & Production Decision:
 
+* **Overall accuracy is an ineffective metric for model selection.** Accuracy values clustered tightly between 0.965 and 0.981 across vastly different models due to the 85% majority dominance of the `none` class.
+  
+* **Macro F1 provides the true operational benchmark.** Equal weighting across all 9 classes ensures minority defect performance is properly reflected in the top-line score.
+  
+* **Class-specific evaluation highlights distinct model strengths.** `Edge-Ring` and `none` classes are nearly solved across all models (F1 0.98–0.99). Model performance differences are most pronounced in `Scratch`, `Random`, `Center`, `Donut`, and `Loc`.
+  
+* **ResNet without class weights is the optimal model for production.** ResNet delivers top Macro F1 (0.911), top Macro Precision (0.940), matches baseline recall, and achieves superior accuracy (0.981).
 
+<table>
+  <tr>
+    <td align="center"><b>Model performance comparison with and without weights (F1 scores per class)</b></td>
+  </tr>
+  <tr>
+    <td><img width="1572" height="425" alt="bar1" src="https://github.com/user-attachments/assets/6acf6abf-d060-4397-bacd-f8078a1f3b1b" /></td>
+  </tr>
+</table>
+
+# Recommendations:
+
+Based on the insights and findings above, we recommend the engineering and production teams consider the following:
+
+* ResNet without class weights achieved the highest Macro F1 (0.911) and Macro Precision (0.940) while maintaining top recall. **Deploy the ResNet architecture without class weights as the primary wafer map defect classifier.**
+  
+* Applying class weights to datasets already balanced by undersampling and D4 augmentation reduced F1 performance by up to 6 percentage points. **Avoid stacking multiple imbalance-handling techniques that target the same pipeline stage.**
+  
+* Global Max Pooling discards spatial coordinate information essential for detecting location-dependent patterns like `Center` or `Edge-Loc`. **Retain Flatten heads rather than Global Average/Max Pooling in CNN architectures for spatial wafer maps.**
+  
+* Equal precision/recall weighting ($50/50$ in F1) may not reflect actual fabrication plant costs where false alarms and missed defects carry different financial impacts. **Tune model decision thresholds to align directly with specific fab cost matrices for false positives vs. false negatives.**
+  
+* Loss functions like Focal Loss dynamically adjust weighting during training without causing severe precision degradation. **Explore Focal Loss as a smooth alternative to manual threshold tuning or static class weighting.**
+
+# Assumptions and Caveats:
+
+Throughout the analysis, multiple assumptions were made to manage challenges with the data:
+
+* **Fixed Image Dimension Resizing:** Maps smaller than $54\times54$ were padded with background pixels (`[1, 0, 0]`), assuming padded margins do not alter feature representation. Maps larger than $54\times54$ (~14% of the dataset) were downsampled using nearest-neighbor interpolation, assuming minimal loss of critical pattern detail.
+  
+* **Symmetry Augmentation Validity:** D4 dihedral group transformations (8 rotations/reflections) assume wafer defect patterns are orientation-invariant relative to manufacturing cause.
+  
+* **Test Set Representative Distribution:** The test split ($n = 17,295$) was assumed to accurately represent real-world fab defect distribution, with `none` comprising ~85% of total volume.
 
 
