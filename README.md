@@ -19,7 +19,7 @@ The semiconductor database structure consists of real silicon wafer maps from th
 - **Defective Die Channel (Value 2):** Non-functional integrated circuits exhibiting defect patterns.
 - **Pattern Classes (9 Total):** `none` (no defect, ~85% majority class) and 8 defect classes: `Center`, `Donut`, `Edge-Loc`, `Edge-Ring`, `Loc`, `Near-full`, `Random`, and `Scratch`.
 
-### WM-811K Dataset Test Set Distribution (Total: 17,295)
+### WM-811K Dataset Training Set Distribution (Total: 17,295)
 
 | Class / Defect Type | Count | Share (%) |
 | :--- | ---: | ---: |
