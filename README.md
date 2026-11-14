@@ -19,7 +19,7 @@ The semiconductor database structure consists of real silicon wafer maps from th
 - **Defective Die Channel (Value 2):** Non-functional integrated circuits exhibiting defect patterns.
 - **Pattern Classes (9 Total):** `none` (no defect, ~85% majority class) and 8 defect classes: `Center`, `Donut`, `Edge-Loc`, `Edge-Ring`, `Loc`, `Near-full`, `Random`, and `Scratch`.
 
-### WM-811K Dataset Training Set Distribution (Total: 155,655)
+### WM-811K Dataset Training (After Stratification) Set Distribution (Total: 155,655)
 
 | Class / Defect Type | Count | Share (%) |
 | :--- | ---: | ---: |
@@ -32,14 +32,14 @@ The semiconductor database structure consists of real silicon wafer maps from th
 | Random | 779 | ~0.5% |
 | Donut | 499 | ~0.3% |
 | Near-full | 134 | ~0.1% |
-| **Total** | **17,295** | **100.0%** |
+| **Total** | **155,655** | **100.0%** |
 
 
 # Executive Summary
 
 ### Overview of Findings
 
-Standard accuracy metrics are severely misleading for wafer defect classification because a naive model predicting `none` every time achieves 85% accuracy while failing completely on defect detection. Evaluation on the true imbalanced distribution ($n = 17,295$) reveals that model depth with residual connections (ResNet) achieves the highest Macro F1 score of 0.911 and Macro Precision of 0.940 without class weights. Furthermore, stacking class weighting on top of sampling and augmentation causes a "stacking paradox" that drastically degrades precision due to over-correction.
+Standard accuracy metrics are severely misleading for wafer defect classification because a naive model predicting `none` every time achieves 85% accuracy while failing completely on defect detection. Evaluation on the true imbalanced distribution ($n = 155,655$) reveals that model depth with residual connections (ResNet) achieves the highest Macro F1 score of 0.911 and Macro Precision of 0.940 without class weights. Furthermore, stacking class weighting on top of sampling and augmentation causes a "stacking paradox" that drastically degrades precision due to over-correction.
 
 <img width="1082" height="505" alt="tab2" src="https://github.com/user-attachments/assets/251dc732-9124-400b-bf7f-ba134ac624a6" />
 
@@ -66,7 +66,7 @@ Standard accuracy metrics are severely misleading for wafer defect classificatio
 
 ### Class Imbalance & Re-balancing Dynamics:
 
-* **Evaluating on artificially balanced test sets creates a false impression of success.** Initial evaluations on re-balanced test data yielded a ~92% macro score. However, testing on the true imbalanced distribution ($n = 17,295$) exposed significant false-positive rates.
+* **Evaluating on artificially balanced test sets creates a false impression of success.** Initial evaluations on re-balanced test data yielded a ~92% macro score. However, testing on the true imbalanced distribution ($n = 155,655$) exposed significant false-positive rates.
   
 * **Applying class weights to pre-balanced data creates a "stacking paradox."** Combining undersampling, D4 augmentation, and class weighting causes double-correction. The model over-corrects toward minority classes, causing precision to collapse.
   
@@ -127,6 +127,6 @@ Throughout the analysis, multiple assumptions were made to manage challenges wit
   
 * **Symmetry Augmentation Validity:** D4 dihedral group transformations (8 rotations/reflections) assume wafer defect patterns are orientation-invariant relative to manufacturing cause.
   
-* **Test Set Representative Distribution:** The test split ($n = 17,295$) was assumed to accurately represent real-world fab defect distribution, with `none` comprising ~85% of total volume.
+* **Test Set Representative Distribution:** The test split ($n = 155,655$) was assumed to accurately represent real-world fab defect distribution, with `none` comprising ~85% of total volume.
 
 
